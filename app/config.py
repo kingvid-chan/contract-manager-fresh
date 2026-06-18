@@ -10,9 +10,9 @@ class Settings(BaseSettings):
 
     # Application
     app_name: str = "Contract Manager"
-    app_version: str = "0.0.1"
+    app_version: str = "0.0.2"
     base_path: str = "/projects/contract-manager-fresh"
-    version_token: str = "0.0.1"
+    version_token: str = "0.0.2"
 
     # Database
     database_url: str = "sqlite:///./data/contract_manager.db"
