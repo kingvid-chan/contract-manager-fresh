@@ -1,34 +1,67 @@
-# {{PROJECT_NAME}} 运行手册
+# Contract Manager 运行手册 v0.0.2
 
 ## 本地安装与启动
 
+```bash
+# 使用项目 run.sh 脚本
+bash run.sh
+
+# 或手动启动
+~/外部需求/.conda/codingagent/bin/pip install -r requirements.txt
+~/外部需求/.conda/codingagent/bin/python seeds/seed.py
+~/外部需求/.conda/codingagent/bin/python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+```
+
 ## 测试、构建与健康检查
 
-记录自动测试、生产启动、health endpoint、公网浏览器关键流程、静态资源、
-控制台错误和 Kimi 截图视觉验收方式。
+```bash
+# 运行全部自测
+~/外部需求/.conda/codingagent/bin/python -m pytest tests/test_self.py -v
+
+# 测试通过条件: 85 passed
+```
 
 ## 环境变量
 
+| Variable | Default | Description |
+|---|---|---|
+| `APP_VERSION` | 0.0.2 | 应用版本 |
+| `VERSION_TOKEN` | 0.0.2 | 静态资源版本令牌 |
+| `DATABASE_URL` | sqlite:///./data/contract_manager.db | 数据库 URL |
+| `SECRET_KEY` | dev-secret-change-in-production | Session 密钥 |
+| `UPLOAD_DIR` | ./uploads | 附件存储目录 |
+
 ## Base Path
 
-项目必须支持 `/projects/{{PROJECT_SLUG}}/`，静态资源和前端路由不得假设部署在 `/`。
+项目 base path: `/projects/contract-manager-fresh/`
 
-公网浏览器验收时，最终 URL 和所有项目资源必须保留此前缀。
+- 前端 SPA: `GET /projects/contract-manager-fresh/` → `spa/index.html`
+- JSON API: `/projects/contract-manager-fresh/api/*`
+- SSR 路由: `/projects/contract-manager-fresh/auth/*`, `/projects/contract-manager-fresh/contracts/*`, etc.
+- 静态资源: `/projects/contract-manager-fresh/static/*`
 
 ## 缓存策略
 
-功能迭代后公网 URL 不变，必须防止老板浏览器命中缓存旧页面：
+- HTML 响应头: `Cache-Control: no-cache, no-store, must-revalidate`
+- 静态资源 URL: `?v=0.0.2` 版本令牌
+- 所有资源路径保留 `/projects/contract-manager-fresh/` 前缀
 
-- HTML 文档**真实 HTTP 响应头**必须携带 `Cache-Control: no-cache`（或 `no-store`），每次重新校验；**不得仅用 `<meta http-equiv>` 标签**（浏览器基本忽略其缓存语义），必须由服务器/框架下发响应头；
-- 所有静态资源 URL 必须携带版本令牌 `?v=<当前发布版本 0.0.N>`，且路径保留 `/projects/{{PROJECT_SLUG}}/` 前缀（令牌挂在已带 basePath 的 URL 上）；
-- 版本令牌随 `0.0.N` 递增，于是每个交付版本自动触发缓存失效。
+## 公网浏览器验收
 
-浏览器验收（schema v3 机器报告）会逐条重算：`static_assets` 状态码 200–399、URL 带版本令牌且在 basePath 下（自包含页面可为空），`document_response_headers` 的真实 `Cache-Control` 为 no-cache/no-store，视觉审查须由 Kimi 视觉模型完成。
-
-## Aliyun systemd 与 Nginx
+1. 访问 `https://<domain>/projects/contract-manager-fresh/`
+2. Vue SPA 加载，自动导航到 `/#/login`
+3. 演示账号: admin/admin123, user/user123
+4. HTML 响应 `Cache-Control: no-cache` 头
+5. 静态资源带 `?v=0.0.2` 令牌
 
 ## 日志查看
 
-## 常见故障与恢复
+应用日志输出到 stdout。操作审计日志存储在 `audit_logs` 表，通过 SPA 的 "操作日志" 页面查看。
 
-## 回滚到精确 Tag
+## 回滚
+
+```bash
+# 回滚到 0.0.1
+git checkout tags/v0.0.1
+bash run.sh
+```
