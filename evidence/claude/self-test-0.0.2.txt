@@ -1,0 +1,163 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.13.13, pytest-8.3.4, pluggy-1.6.0 -- /Users/cqw/miniconda3/bin/python3
+cachedir: .pytest_cache
+rootdir: /Users/cqw/外部需求/contract-manager-fresh
+plugins: anyio-4.12.1, flask-1.3.0
+collecting ... collected 85 items
+
+tests/test_self.py::TestLogin::test_login_page_renders PASSED            [  1%]
+tests/test_self.py::TestLogin::test_login_success_admin PASSED           [  2%]
+tests/test_self.py::TestLogin::test_login_success_regular_user PASSED    [  3%]
+tests/test_self.py::TestLogin::test_login_wrong_password PASSED          [  4%]
+tests/test_self.py::TestLogin::test_login_nonexistent_user PASSED        [  5%]
+tests/test_self.py::TestLogin::test_login_disabled_user PASSED           [  7%]
+tests/test_self.py::TestLogin::test_login_page_has_demo_info PASSED      [  8%]
+tests/test_self.py::TestAuthProtection::test_unauthenticated_redirect_to_login PASSED [  9%]
+tests/test_self.py::TestAuthProtection::test_unauthenticated_contracts_redirect PASSED [ 10%]
+tests/test_self.py::TestAuthProtection::test_unauthenticated_users_redirect PASSED [ 11%]
+tests/test_self.py::TestAuthProtection::test_non_admin_cannot_access_users PASSED [ 12%]
+tests/test_self.py::TestAuthProtection::test_non_admin_cannot_access_audit_logs PASSED [ 14%]
+tests/test_self.py::TestUserCRUD::test_list_users PASSED                 [ 15%]
+tests/test_self.py::TestUserCRUD::test_create_user_form PASSED           [ 16%]
+tests/test_self.py::TestUserCRUD::test_create_user PASSED                [ 17%]
+tests/test_self.py::TestUserCRUD::test_create_duplicate_user_fails PASSED [ 18%]
+tests/test_self.py::TestUserCRUD::test_edit_user_form PASSED             [ 20%]
+tests/test_self.py::TestUserCRUD::test_update_user PASSED                [ 21%]
+tests/test_self.py::TestUserCRUD::test_toggle_user_status PASSED         [ 22%]
+tests/test_self.py::TestUserCRUD::test_self_disable_prevented PASSED     [ 23%]
+tests/test_self.py::TestUserCRUD::test_reset_password PASSED             [ 24%]
+tests/test_self.py::TestUserCRUD::test_delete_user PASSED                [ 25%]
+tests/test_self.py::TestUserCRUD::test_self_delete_prevented PASSED      [ 27%]
+tests/test_self.py::TestContractCRUD::test_contract_list_page PASSED     [ 28%]
+tests/test_self.py::TestContractCRUD::test_create_contract_form PASSED   [ 29%]
+tests/test_self.py::TestContractCRUD::test_create_contract PASSED        [ 30%]
+tests/test_self.py::TestContractCRUD::test_create_contract_missing_title PASSED [ 31%]
+tests/test_self.py::TestContractCRUD::test_create_contract_missing_party_a PASSED [ 32%]
+tests/test_self.py::TestContractCRUD::test_contract_detail_page PASSED   [ 34%]
+tests/test_self.py::TestContractCRUD::test_edit_contract PASSED          [ 35%]
+tests/test_self.py::TestContractCRUD::test_status_flow_draft_to_pending_review PASSED [ 36%]
+tests/test_self.py::TestContractCRUD::test_status_flow_pending_to_approved PASSED [ 37%]
+tests/test_self.py::TestContractCRUD::test_invalid_status_transition_rejected PASSED [ 38%]
+tests/test_self.py::TestContractCRUD::test_delete_contract PASSED        [ 40%]
+tests/test_self.py::TestContractCRUD::test_contract_404 PASSED           [ 41%]
+tests/test_self.py::TestAttachments::test_upload_pdf PASSED              [ 42%]
+tests/test_self.py::TestAttachments::test_upload_docx PASSED             [ 43%]
+tests/test_self.py::TestAttachments::test_reject_invalid_type_txt PASSED [ 44%]
+tests/test_self.py::TestAttachments::test_reject_invalid_type_image PASSED [ 45%]
+tests/test_self.py::TestAttachments::test_reject_oversized_file PASSED   [ 47%]
+tests/test_self.py::TestAttachments::test_download_attachment PASSED     [ 48%]
+tests/test_self.py::TestAttachments::test_delete_attachment PASSED       [ 49%]
+tests/test_self.py::TestAuditLog::test_audit_logs_page_admin PASSED      [ 50%]
+tests/test_self.py::TestAuditLog::test_audit_logs_exist PASSED           [ 51%]
+tests/test_self.py::TestAuditLog::test_audit_logs_denied_for_user PASSED [ 52%]
+tests/test_self.py::TestCacheControl::test_html_response_has_no_cache PASSED [ 54%]
+tests/test_self.py::TestCacheControl::test_dashboard_has_no_cache PASSED [ 55%]
+tests/test_self.py::TestStaticAssets::test_login_css_with_version_token PASSED [ 56%]
+tests/test_self.py::TestStaticAssets::test_spa_js_with_version_token PASSED [ 57%]
+tests/test_self.py::TestStaticAssets::test_static_css_accessible PASSED  [ 58%]
+tests/test_self.py::TestStaticAssets::test_spa_index_returns_html PASSED [ 60%]
+tests/test_self.py::TestStaticAssets::test_spa_theme_css_accessible PASSED [ 61%]
+tests/test_self.py::TestStaticAssets::test_spa_js_accessible PASSED      [ 62%]
+tests/test_self.py::TestContractAutoNumber::test_contract_number_format PASSED [ 63%]
+tests/test_self.py::TestJsonApiAuth::test_api_login_success PASSED       [ 64%]
+tests/test_self.py::TestJsonApiAuth::test_api_login_wrong_password PASSED [ 65%]
+tests/test_self.py::TestJsonApiAuth::test_api_login_disabled_user PASSED [ 67%]
+tests/test_self.py::TestJsonApiAuth::test_api_me_authenticated PASSED    [ 68%]
+tests/test_self.py::TestJsonApiAuth::test_api_me_unauthenticated PASSED  [ 69%]
+tests/test_self.py::TestJsonApiAuth::test_api_logout PASSED              [ 70%]
+tests/test_self.py::TestJsonApiContracts::test_api_list_contracts PASSED [ 71%]
+tests/test_self.py::TestJsonApiContracts::test_api_get_contract PASSED   [ 72%]
+tests/test_self.py::TestJsonApiContracts::test_api_get_contract_404 PASSED [ 74%]
+tests/test_self.py::TestJsonApiContracts::test_api_create_contract PASSED [ 75%]
+tests/test_self.py::TestJsonApiContracts::test_api_create_contract_missing_title PASSED [ 76%]
+tests/test_self.py::TestJsonApiContracts::test_api_update_contract PASSED [ 77%]
+tests/test_self.py::TestJsonApiContracts::test_api_change_status PASSED  [ 78%]
+tests/test_self.py::TestJsonApiContracts::test_api_invalid_status_transition PASSED [ 80%]
+tests/test_self.py::TestJsonApiContracts::test_api_delete_contract PASSED [ 81%]
+tests/test_self.py::TestJsonApiContracts::test_api_unauthenticated PASSED [ 82%]
+tests/test_self.py::TestJsonApiUsers::test_api_list_users PASSED         [ 83%]
+tests/test_self.py::TestJsonApiUsers::test_api_create_user PASSED        [ 84%]
+tests/test_self.py::TestJsonApiUsers::test_api_create_duplicate_user PASSED [ 85%]
+tests/test_self.py::TestJsonApiUsers::test_api_update_user PASSED        [ 87%]
+tests/test_self.py::TestJsonApiUsers::test_api_toggle_status PASSED      [ 88%]
+tests/test_self.py::TestJsonApiUsers::test_api_self_toggle_prevented PASSED [ 89%]
+tests/test_self.py::TestJsonApiUsers::test_api_reset_password PASSED     [ 90%]
+tests/test_self.py::TestJsonApiUsers::test_api_delete_user PASSED        [ 91%]
+tests/test_self.py::TestJsonApiUsers::test_api_self_delete_prevented PASSED [ 92%]
+tests/test_self.py::TestJsonApiUsers::test_api_users_denied_for_non_admin PASSED [ 94%]
+tests/test_self.py::TestJsonApiAudit::test_api_audit_logs_admin PASSED   [ 95%]
+tests/test_self.py::TestJsonApiAudit::test_api_audit_logs_denied_for_user PASSED [ 96%]
+tests/test_self.py::TestJsonApiAttachments::test_api_upload_pdf PASSED   [ 97%]
+tests/test_self.py::TestJsonApiAttachments::test_api_reject_invalid_type PASSED [ 98%]
+tests/test_self.py::TestJsonApiAttachments::test_api_delete_attachment PASSED [100%]
+
+=============================== warnings summary ===============================
+../../miniconda3/lib/python3.13/site-packages/pydantic/_internal/_config.py:291
+../../miniconda3/lib/python3.13/site-packages/pydantic/_internal/_config.py:291
+  /Users/cqw/miniconda3/lib/python3.13/site-packages/pydantic/_internal/_config.py:291: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.9/migration/
+    warnings.warn(DEPRECATION_MESSAGE, DeprecationWarning)
+
+app/main.py:255
+  /Users/cqw/外部需求/contract-manager-fresh/app/main.py:255: DeprecationWarning: 
+          on_event is deprecated, use lifespan event handlers instead.
+  
+          Read more about it in the
+          [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+          
+    @app.on_event("startup")
+
+../../miniconda3/lib/python3.13/site-packages/fastapi/applications.py:4495
+  /Users/cqw/miniconda3/lib/python3.13/site-packages/fastapi/applications.py:4495: DeprecationWarning: 
+          on_event is deprecated, use lifespan event handlers instead.
+  
+          Read more about it in the
+          [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+          
+    return self.router.on_event(event_type)
+
+tests/test_self.py: 46 warnings
+  /Users/cqw/miniconda3/lib/python3.13/site-packages/starlette/templating.py:161: DeprecationWarning: The `name` is not the first parameter anymore. The first parameter should be the `Request` instance.
+  Replace `TemplateResponse(name, {"request": request})` by `TemplateResponse(request, name)`.
+    warnings.warn(
+
+tests/test_self.py: 78 warnings
+  /Users/cqw/miniconda3/lib/python3.13/site-packages/starlette/testclient.py:488: DeprecationWarning: Setting per-request cookies=<...> is being deprecated, because the expected behaviour on cookie persistence is ambiguous. Set cookies directly on the client instance instead.
+    return super().request(
+
+tests/test_self.py: 15 warnings
+  /Users/cqw/外部需求/contract-manager-fresh/app/services/user.py:16: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+    return db.query(User).get(user_id)
+
+tests/test_self.py: 26 warnings
+  /Users/cqw/外部需求/contract-manager-fresh/app/services/contract.py:42: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+    return db.query(Contract).get(contract_id)
+
+tests/test_self.py::TestAttachments::test_upload_pdf
+tests/test_self.py::TestAttachments::test_upload_docx
+tests/test_self.py::TestAttachments::test_reject_invalid_type_txt
+tests/test_self.py::TestAttachments::test_reject_invalid_type_image
+tests/test_self.py::TestAttachments::test_reject_oversized_file
+tests/test_self.py::TestAttachments::test_download_attachment
+  /Users/cqw/外部需求/contract-manager-fresh/app/routers/attachments.py:45: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+    contract = db.query(Contract).get(contract_id)
+
+tests/test_self.py::TestAttachments::test_download_attachment
+  /Users/cqw/外部需求/contract-manager-fresh/app/routers/attachments.py:109: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+    attachment = db.query(Attachment).get(attachment_id)
+
+tests/test_self.py::TestAttachments::test_delete_attachment
+  /Users/cqw/外部需求/contract-manager-fresh/app/routers/attachments.py:138: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+    attachment = db.query(Attachment).get(attachment_id)
+
+tests/test_self.py::TestJsonApiAttachments::test_api_upload_pdf
+tests/test_self.py::TestJsonApiAttachments::test_api_reject_invalid_type
+tests/test_self.py::TestJsonApiAttachments::test_api_delete_attachment
+  /Users/cqw/外部需求/contract-manager-fresh/app/api/attachments.py:37: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+    contract = db.query(Contract).get(contract_id)
+
+tests/test_self.py::TestJsonApiAttachments::test_api_delete_attachment
+  /Users/cqw/外部需求/contract-manager-fresh/app/api/attachments.py:107: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+    attachment = db.query(Attachment).get(attachment_id)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+====================== 85 passed, 181 warnings in 14.14s =======================
