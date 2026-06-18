@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}操作日志 — Contract Manager{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>📝 操作日志</h1>
+    <a href="{{ base_path }}/" class="btn btn-sm">返回首页</a>
+</div>
+
+{% if logs %}
+<table class="table">
+    <thead>
+        <tr>
+            <th>时间</th>
+            <th>用户</th>
+            <th>操作</th>
+            <th>实体类型</th>
+            <th>实体ID</th>
+            <th>详情</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for log in logs %}
+        <tr>
+            <td>{{ log.created_at.strftime('%Y-%m-%d %H:%M:%S') if log.created_at else '-' }}</td>
+            <td>{{ log.user.username if log.user else '?' }}</td>
+            <td><span class="audit-action action-{{ log.action }}">{{ log.action }}</span></td>
+            <td>{{ log.entity_type }}</td>
+            <td>{{ log.entity_id or '-' }}</td>
+            <td><small>{{ log.details or '-' }}</small></td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<div class="empty-state">
+    <p>暂无操作记录</p>
+</div>
+{% endif %}
+{% endblock %}

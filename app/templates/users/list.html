@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}用户管理 — Contract Manager{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>👥 用户管理</h1>
+    <a href="{{ base_path }}/users/new" class="btn btn-primary">+ 新建用户</a>
+</div>
+
+{% if users %}
+<table class="table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>用户名</th>
+            <th>角色</th>
+            <th>状态</th>
+            <th>创建时间</th>
+            <th>操作</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for u in users %}
+        <tr>
+            <td>{{ u.id }}</td>
+            <td>{{ u.username }}</td>
+            <td><span class="role-badge role-{{ u.role }}">{{ u.role }}</span></td>
+            <td><span class="status-badge status-{{ u.status }}">{{ u.status }}</span></td>
+            <td>{{ u.created_at.strftime('%Y-%m-%d') if u.created_at else '-' }}</td>
+            <td class="actions">
+                <a href="{{ base_path }}/users/{{ u.id }}/edit" class="btn btn-sm">编辑</a>
+                <form method="post" action="{{ base_path }}/users/{{ u.id }}/toggle-status" style="display:inline">
+                    <button type="submit" class="btn btn-sm btn-warning">
+                        {{ '禁用' if u.status == 'active' else '启用' }}
+                    </button>
+                </form>
+                <form method="post" action="{{ base_path }}/users/{{ u.id }}/delete"
+                      style="display:inline"
+                      onsubmit="return confirm('确认删除用户 {{ u.username }}？')">
+                    <button type="submit" class="btn btn-sm btn-danger">删除</button>
+                </form>
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<div class="empty-state">
+    <p>暂无用户数据</p>
+</div>
+{% endif %}
+{% endblock %}

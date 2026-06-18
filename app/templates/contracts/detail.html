@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+{% block title %}{{ contract.title }} — Contract Manager{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>{{ contract.title }}</h1>
+    <div class="header-actions">
+        <a href="{{ base_path }}/contracts/{{ contract.id }}/edit" class="btn btn-secondary">编辑</a>
+        <a href="{{ base_path }}/" class="btn btn-sm">返回列表</a>
+    </div>
+</div>
+
+<div class="detail-card">
+    <div class="detail-grid">
+        <div class="detail-item">
+            <label>合同编号</label>
+            <code>{{ contract.contract_no }}</code>
+        </div>
+        <div class="detail-item">
+            <label>状态</label>
+            <span class="status-badge status-{{ contract.status }}">{{ contract.status }}</span>
+        </div>
+        <div class="detail-item">
+            <label>甲方</label>
+            <span>{{ contract.party_a }}</span>
+        </div>
+        <div class="detail-item">
+            <label>乙方</label>
+            <span>{{ contract.party_b or '-' }}</span>
+        </div>
+        <div class="detail-item">
+            <label>合同金额</label>
+            <span>{% if contract.amount %}¥{{ "%.2f"|format(contract.amount) }}{% else %}-{% endif %}</span>
+        </div>
+        <div class="detail-item">
+            <label>签订日期</label>
+            <span>{{ contract.sign_date.strftime('%Y-%m-%d') if contract.sign_date else '-' }}</span>
+        </div>
+        <div class="detail-item">
+            <label>生效日期</label>
+            <span>{{ contract.start_date.strftime('%Y-%m-%d') if contract.start_date else '-' }}</span>
+        </div>
+        <div class="detail-item">
+            <label>到期日期</label>
+            <span>{{ contract.end_date.strftime('%Y-%m-%d') if contract.end_date else '-' }}</span>
+        </div>
+        <div class="detail-item">
+            <label>创建人</label>
+            <span>{{ contract.creator.username if contract.creator else '-' }}</span>
+        </div>
+        <div class="detail-item">
+            <label>创建时间</label>
+            <span>{{ contract.created_at.strftime('%Y-%m-%d %H:%M') if contract.created_at else '-' }}</span>
+        </div>
+        <div class="detail-item">
+            <label>更新时间</label>
+            <span>{{ contract.updated_at.strftime('%Y-%m-%d %H:%M') if contract.updated_at else '-' }}</span>
+        </div>
+    </div>
+    {% if contract.remarks %}
+    <div class="detail-section">
+        <label>备注</label>
+        <p class="remarks">{{ contract.remarks }}</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Status Transitions -->
+<div class="card">
+    <h3>状态流转</h3>
+    <div class="status-flow">
+        {% if contract.can_transition_to('pending_review') %}
+        <form method="post" action="{{ base_path }}/contracts/{{ contract.id }}/status" style="display:inline">
+            <input type="hidden" name="status" value="pending_review">
+            <button type="submit" class="btn btn-warning">提交审核</button>
+        </form>
+        {% endif %}
+        {% if contract.can_transition_to('approved') and user.role == 'admin' %}
+        <form method="post" action="{{ base_path }}/contracts/{{ contract.id }}/status" style="display:inline">
+            <input type="hidden" name="status" value="approved">
+            <button type="submit" class="btn btn-success">审批通过</button>
+        </form>
+        {% endif %}
+        {% if contract.can_transition_to('draft') %}
+        <form method="post" action="{{ base_path }}/contracts/{{ contract.id }}/status" style="display:inline">
+            <input type="hidden" name="status" value="draft">
+            <button type="submit" class="btn btn-sm">退回草稿</button>
+        </form>
+        {% endif %}
+        {% if contract.can_transition_to('active') and user.role == 'admin' %}
+        <form method="post" action="{{ base_path }}/contracts/{{ contract.id }}/status" style="display:inline">
+            <input type="hidden" name="status" value="active">
+            <button type="submit" class="btn btn-primary">生效</button>
+        </form>
+        {% endif %}
+        {% if contract.can_transition_to('expired') %}
+        <form method="post" action="{{ base_path }}/contracts/{{ contract.id }}/status" style="display:inline">
+            <input type="hidden" name="status" value="expired">
+            <button type="submit" class="btn btn-sm">标记到期</button>
+        </form>
+        {% endif %}
+        {% if contract.can_transition_to('terminated') %}
+        <form method="post" action="{{ base_path }}/contracts/{{ contract.id }}/status" style="display:inline">
+            <input type="hidden" name="status" value="terminated">
+            <button type="submit" class="btn btn-danger" onclick="return confirm('确认终止此合同？')">终止合同</button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Delete -->
+<div class="card danger-zone">
+    <h3>危险操作</h3>
+    <form method="post" action="{{ base_path }}/contracts/{{ contract.id }}/delete"
+          onsubmit="return confirm('确认删除合同 {{ contract.contract_no }}？此操作不可恢复。')">
+        <button type="submit" class="btn btn-danger">删除合同</button>
+    </form>
+</div>
+
+<!-- Attachments -->
+<div class="card">
+    <h3>📎 附件</h3>
+
+    <form method="post" action="{{ base_path }}/contracts/{{ contract.id }}/attachments"
+          enctype="multipart/form-data" class="upload-form">
+        <div class="form-group">
+            <label for="file">上传附件 (PDF、DOC、DOCX，最大 10MB)</label>
+            <input type="file" id="file" name="file"
+                   accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                   required>
+        </div>
+        <button type="submit" class="btn btn-primary">上传</button>
+    </form>
+
+    {% if contract.attachments %}
+    <table class="table" style="margin-top:1rem">
+        <thead>
+            <tr>
+                <th>文件名</th>
+                <th>类型</th>
+                <th>大小</th>
+                <th>上传时间</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for a in contract.attachments %}
+            <tr>
+                <td>{{ a.filename }}</td>
+                <td>{{ a.mime_type }}</td>
+                <td>{{ "%.1f"|format(a.file_size / 1024) }} KB</td>
+                <td>{{ a.created_at.strftime('%Y-%m-%d %H:%M') if a.created_at else '-' }}</td>
+                <td>
+                    <a href="{{ base_path }}/attachments/{{ a.id }}/download" class="btn btn-sm">下载</a>
+                    <form method="post" action="{{ base_path }}/attachments/{{ a.id }}/delete"
+                          style="display:inline"
+                          onsubmit="return confirm('确认删除附件？')">
+                        <button type="submit" class="btn btn-sm btn-danger">删除</button>
+                    </form>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="text-muted">暂无附件</p>
+    {% endif %}
+</div>
+{% endblock %}
