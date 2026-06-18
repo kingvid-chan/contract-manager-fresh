@@ -1,0 +1,50 @@
+{
+  "project": "contract-manager-fresh",
+  "iteration": "0.0.2",
+  "frontend": "Vue.js 3 CDN + Vue Router hash mode",
+  "theme": "Dark theme with CSS custom properties, bg=#1a1a2e",
+  "api_pattern": "JSON REST API at /projects/contract-manager-fresh/api/",
+  "components": [
+    "LoginPage",
+    "NavBar",
+    "MainLayout",
+    "Dashboard",
+    "ContractDetail",
+    "ContractEdit",
+    "UserList",
+    "UserEdit",
+    "AuditLogs",
+    "NotFound"
+  ],
+  "routes": [
+    "/login",
+    "/ (Dashboard)",
+    "/contracts/new",
+    "/contracts/:id",
+    "/contracts/:id/edit",
+    "/users",
+    "/users/new",
+    "/users/:id/edit",
+    "/audit-logs",
+    "/:pathMatch(.*)* (404)"
+  ],
+  "files": [
+    "app/api/__init__.py",
+    "app/api/attachments.py",
+    "app/api/audit.py",
+    "app/api/auth.py",
+    "app/api/contracts.py",
+    "app/api/users.py",
+    "app/config.py",
+    "app/main.py",
+    "app/static/spa/css/theme.css",
+    "app/static/spa/index.html",
+    "app/static/spa/js/app.js",
+    "case/events.jsonl",
+    "docs/architecture.md",
+    "docs/decisions/001-vue-dark-theme.md",
+    "docs/iterations/0.0.2.md",
+    "docs/runbook.md",
+    "tests/test_self.py"
+  ]
+}

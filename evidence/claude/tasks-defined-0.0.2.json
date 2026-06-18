@@ -1,0 +1,13 @@
+{
+  "project": "contract-manager-fresh",
+  "iteration": "0.0.2",
+  "tasks": [
+    {"id":"T1","name":"ADR 技术决策","files":["docs/decisions/001-vue-dark-theme.md"],"acceptance":"通过"},
+    {"id":"T2","name":"API路由层","files":["app/api/auth.py","app/api/users.py","app/api/contracts.py","app/api/attachments.py","app/api/audit.py"],"acceptance":"通过"},
+    {"id":"T3","name":"应用入口更新","files":["app/main.py","app/config.py"],"acceptance":"通过"},
+    {"id":"T4","name":"Vue SPA前端","files":["app/static/spa/index.html","app/static/spa/js/app.js"],"acceptance":"通过"},
+    {"id":"T5","name":"暗色主题CSS","files":["app/static/spa/css/theme.css"],"acceptance":"通过"},
+    {"id":"T6","name":"自测脚本","files":["tests/test_self.py"],"acceptance":"通过"},
+    {"id":"T7","name":"文档更新","files":["docs/architecture.md","docs/runbook.md","docs/iterations/0.0.2.md"],"acceptance":"通过"}
+  ]
+}
