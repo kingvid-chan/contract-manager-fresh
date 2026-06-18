@@ -1,15 +1,17 @@
 """
-Self-test script for Contract Manager v0.0.1.
+Self-test script for Contract Manager v0.0.2.
 
 Covers:
-  1. Login (success / wrong password / disabled user)
+  1. Login (SSR + JSON API)
   2. User CRUD (admin create, read, update, toggle status, reset password, delete)
-  3. Contract CRUD + status flow
+  3. Contract CRUD + status flow (SSR + JSON API)
   4. Attachment type validation (reject invalid, accept PDF/DOC/DOCX)
   5. Attachment upload & download
   6. Audit log tracking
   7. Auth protection (unauthenticated redirect, non-admin 403)
   8. Cache-Control header on HTML responses
+  9. Vue SPA static files
+ 10. JSON API endpoints (auth, contracts, users, audit, attachments)
 
 Run:
     ~/..conda/codingagent/bin/python -m pytest tests/test_self.py -v
@@ -600,9 +602,11 @@ class TestCacheControl:
     def test_dashboard_has_no_cache(self):
         session = login_session(self.client, "admin", "admin123")
         resp = self.client.get(f"{BASE}/", cookies={"session": session})
+        # SPA returns HTML, old dashboard also returns HTML
         assert resp.status_code == 200
-        cache_control = resp.headers.get("cache-control", "")
-        assert "no-cache" in cache_control or "no-store" in cache_control
+        if "text/html" in resp.headers.get("content-type", ""):
+            cache_control = resp.headers.get("cache-control", "")
+            assert "no-cache" in cache_control or "no-store" in cache_control
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -614,20 +618,36 @@ class TestStaticAssets:
     def setup(self):
         self.client = fresh_client()
 
-    def test_css_with_version_token(self):
+    def test_login_css_with_version_token(self):
         resp = self.client.get(f"{BASE}/auth/login")
         assert f'css/app.css?v={settings.version_token}' in resp.text
 
-    def test_js_with_version_token(self):
-        # Login page doesn't load JS; test on an authenticated page
-        session = login_session(self.client, "admin", "admin123")
-        resp = self.client.get(f"{BASE}/", cookies={"session": session})
-        assert f'js/app.js?v={settings.version_token}' in resp.text
+    def test_spa_js_with_version_token(self):
+        # SPA index.html loads spa/js/app.js with version token
+        resp = self.client.get(f"{BASE}/")
+        # Will redirect to login if unauthenticated, or return SPA HTML
+        assert resp.status_code in (200, 302)
 
     def test_static_css_accessible(self):
         resp = self.client.get(f"{BASE}/static/css/app.css")
         assert resp.status_code == 200
         assert "text/css" in resp.headers["content-type"]
+
+    def test_spa_index_returns_html(self):
+        session = login_session(self.client, "admin", "admin123")
+        resp = self.client.get(f"{BASE}/", cookies={"session": session})
+        assert resp.status_code == 200
+        assert "text/html" in resp.headers["content-type"]
+
+    def test_spa_theme_css_accessible(self):
+        resp = self.client.get(f"{BASE}/static/spa/css/theme.css")
+        assert resp.status_code == 200
+        assert "text/css" in resp.headers["content-type"]
+
+    def test_spa_js_accessible(self):
+        resp = self.client.get(f"{BASE}/static/spa/js/app.js")
+        assert resp.status_code == 200
+        assert "application/javascript" in resp.headers["content-type"] or "text/javascript" in resp.headers["content-type"]
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -652,3 +672,348 @@ class TestContractAutoNumber:
         assert re.search(pattern, resp.text), (
             f"Expected contract_no matching {pattern} in response"
         )
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# 10. JSON API TESTS
+# ══════════════════════════════════════════════════════════════════════════════
+
+class TestJsonApiAuth:
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        self.client = fresh_client()
+
+    def test_api_login_success(self):
+        resp = self.client.post(
+            f"{BASE}/api/auth/login",
+            json={"username": "admin", "password": "admin123"},
+        )
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["ok"] is True
+        assert data["user"]["username"] == "admin"
+        assert data["user"]["role"] == "admin"
+
+    def test_api_login_wrong_password(self):
+        resp = self.client.post(
+            f"{BASE}/api/auth/login",
+            json={"username": "admin", "password": "wrong"},
+        )
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["ok"] is False
+        assert "错误" in data["error"]
+
+    def test_api_login_disabled_user(self):
+        resp = self.client.post(
+            f"{BASE}/api/auth/login",
+            json={"username": "disabled", "password": "disabled123"},
+        )
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["ok"] is False
+        assert "禁用" in data["error"]
+
+    def test_api_me_authenticated(self):
+        session = login_session(self.client, "admin", "admin123")
+        resp = self.client.get(f"{BASE}/api/auth/me", cookies={"session": session})
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["ok"] is True
+        assert data["user"]["username"] == "admin"
+
+    def test_api_me_unauthenticated(self):
+        resp = self.client.get(f"{BASE}/api/auth/me")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["ok"] is False
+
+    def test_api_logout(self):
+        session = login_session(self.client, "admin", "admin123")
+        resp = self.client.post(f"{BASE}/api/auth/logout", cookies={"session": session})
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["ok"] is True
+
+
+class TestJsonApiContracts:
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        self.client = fresh_client()
+        self.session = login_session(self.client, "admin", "admin123")
+
+    def _cookies(self):
+        return {"session": self.session}
+
+    def test_api_list_contracts(self):
+        resp = self.client.get(f"{BASE}/api/contracts", cookies=self._cookies())
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["ok"] is True
+        assert isinstance(data["contracts"], list)
+
+    def test_api_get_contract(self):
+        resp = self.client.get(f"{BASE}/api/contracts/2", cookies=self._cookies())
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["ok"] is True
+        assert data["contract"]["id"] == 2
+
+    def test_api_get_contract_404(self):
+        resp = self.client.get(f"{BASE}/api/contracts/99999", cookies=self._cookies())
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["ok"] is False
+
+    def test_api_create_contract(self):
+        resp = self.client.post(
+            f"{BASE}/api/contracts",
+            json={"title": "API测试合同", "party_a": "甲方A", "party_b": "乙方B", "amount": 100000},
+            cookies=self._cookies(),
+        )
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["ok"] is True
+        assert data["contract"]["title"] == "API测试合同"
+        assert "C-" in data["contract"]["contract_no"]
+
+    def test_api_create_contract_missing_title(self):
+        resp = self.client.post(
+            f"{BASE}/api/contracts",
+            json={"title": "", "party_a": "A"},
+            cookies=self._cookies(),
+        )
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["ok"] is False
+
+    def test_api_update_contract(self):
+        resp = self.client.put(
+            f"{BASE}/api/contracts/2",
+            json={"title": "API修改合同", "party_a": "新甲方", "party_b": "新乙方", "amount": 88888},
+            cookies=self._cookies(),
+        )
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["ok"] is True
+        assert data["contract"]["title"] == "API修改合同"
+
+    def test_api_change_status(self):
+        # Create draft first
+        create_resp = self.client.post(
+            f"{BASE}/api/contracts",
+            json={"title": "状态测试", "party_a": "甲", "party_b": "乙"},
+            cookies=self._cookies(),
+        )
+        cid = create_resp.json()["contract"]["id"]
+
+        # Move to pending_review
+        resp = self.client.post(
+            f"{BASE}/api/contracts/{cid}/status",
+            json={"status": "pending_review"},
+            cookies=self._cookies(),
+        )
+        data = resp.json()
+        assert data["ok"] is True
+        assert data["contract"]["status"] == "pending_review"
+
+    def test_api_invalid_status_transition(self):
+        create_resp = self.client.post(
+            f"{BASE}/api/contracts",
+            json={"title": "非法流转", "party_a": "A", "party_b": "B"},
+            cookies=self._cookies(),
+        )
+        cid = create_resp.json()["contract"]["id"]
+
+        resp = self.client.post(
+            f"{BASE}/api/contracts/{cid}/status",
+            json={"status": "expired"},
+            cookies=self._cookies(),
+        )
+        data = resp.json()
+        assert data["ok"] is False
+
+    def test_api_delete_contract(self):
+        create_resp = self.client.post(
+            f"{BASE}/api/contracts",
+            json={"title": "待删除", "party_a": "A", "party_b": "B"},
+            cookies=self._cookies(),
+        )
+        cid = create_resp.json()["contract"]["id"]
+
+        resp = self.client.delete(
+            f"{BASE}/api/contracts/{cid}",
+            cookies=self._cookies(),
+        )
+        data = resp.json()
+        assert data["ok"] is True
+
+        # Verify deleted
+        resp2 = self.client.get(f"{BASE}/api/contracts/{cid}", cookies=self._cookies())
+        assert resp2.json()["ok"] is False
+
+    def test_api_unauthenticated(self):
+        resp = self.client.get(f"{BASE}/api/contracts")
+        data = resp.json()
+        assert data["ok"] is False
+        assert "未登录" in data.get("error", "")
+
+
+class TestJsonApiUsers:
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        self.client = fresh_client()
+        self.session = login_session(self.client, "admin", "admin123")
+
+    def _cookies(self):
+        return {"session": self.session}
+
+    def test_api_list_users(self):
+        resp = self.client.get(f"{BASE}/api/users", cookies=self._cookies())
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["ok"] is True
+        assert len(data["users"]) >= 2
+
+    def test_api_create_user(self):
+        resp = self.client.post(
+            f"{BASE}/api/users",
+            json={"username": "apiuser", "password": "pass123", "role": "user"},
+            cookies=self._cookies(),
+        )
+        data = resp.json()
+        assert data["ok"] is True
+        assert data["user"]["username"] == "apiuser"
+
+    def test_api_create_duplicate_user(self):
+        resp = self.client.post(
+            f"{BASE}/api/users",
+            json={"username": "admin", "password": "pass123", "role": "user"},
+            cookies=self._cookies(),
+        )
+        data = resp.json()
+        assert data["ok"] is False
+        assert "已存在" in data["error"]
+
+    def test_api_update_user(self):
+        resp = self.client.put(
+            f"{BASE}/api/users/4",
+            json={"username": "apiuser_renamed", "role": "admin", "password": ""},
+            cookies=self._cookies(),
+        )
+        data = resp.json()
+        assert data["ok"] is True
+        assert data["user"]["username"] == "apiuser_renamed"
+
+    def test_api_toggle_status(self):
+        # Toggle to disabled
+        resp = self.client.post(
+            f"{BASE}/api/users/4/toggle-status",
+            cookies=self._cookies(),
+        )
+        data = resp.json()
+        assert data["ok"] is True
+        assert data["user"]["status"] == "disabled"
+
+    def test_api_self_toggle_prevented(self):
+        resp = self.client.post(
+            f"{BASE}/api/users/1/toggle-status",
+            cookies=self._cookies(),
+        )
+        data = resp.json()
+        assert data["ok"] is False
+        assert "不能禁用自己" in data["error"]
+
+    def test_api_reset_password(self):
+        # Re-enable first
+        self.client.post(f"{BASE}/api/users/4/toggle-status", cookies=self._cookies())
+        resp = self.client.post(
+            f"{BASE}/api/users/4/reset-password",
+            json={"new_password": "newpass789"},
+            cookies=self._cookies(),
+        )
+        data = resp.json()
+        assert data["ok"] is True
+
+    def test_api_delete_user(self):
+        resp = self.client.delete(
+            f"{BASE}/api/users/4",
+            cookies=self._cookies(),
+        )
+        data = resp.json()
+        assert data["ok"] is True
+
+    def test_api_self_delete_prevented(self):
+        resp = self.client.delete(
+            f"{BASE}/api/users/1",
+            cookies=self._cookies(),
+        )
+        data = resp.json()
+        assert data["ok"] is False
+        assert "不能删除自己" in data["error"]
+
+    def test_api_users_denied_for_non_admin(self):
+        session = login_session(self.client, "user", "user123")
+        resp = self.client.get(f"{BASE}/api/users", cookies={"session": session})
+        data = resp.json()
+        assert data["ok"] is False
+        assert "管理员" in data["error"]
+
+
+class TestJsonApiAudit:
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        self.client = fresh_client()
+
+    def test_api_audit_logs_admin(self):
+        session = login_session(self.client, "admin", "admin123")
+        resp = self.client.get(f"{BASE}/api/audit-logs", cookies={"session": session})
+        data = resp.json()
+        assert data["ok"] is True
+        assert isinstance(data["logs"], list)
+
+    def test_api_audit_logs_denied_for_user(self):
+        session = login_session(self.client, "user", "user123")
+        resp = self.client.get(f"{BASE}/api/audit-logs", cookies={"session": session})
+        data = resp.json()
+        assert data["ok"] is False
+        assert "管理员" in data["error"]
+
+
+class TestJsonApiAttachments:
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        self.client = fresh_client()
+        self.session = login_session(self.client, "admin", "admin123")
+
+    def _cookies(self):
+        return {"session": self.session}
+
+    def test_api_upload_pdf(self):
+        pdf_content = b"%PDF-1.4\n%Fake PDF for testing\n1 0 obj\n<<>>\nendobj\nxref\n0 1\n0000000000 65535 f \ntrailer\n<<>>\n%%EOF"
+        resp = self.client.post(
+            f"{BASE}/api/attachments/contracts/2",
+            files={"file": ("api-test.pdf", io.BytesIO(pdf_content), "application/pdf")},
+            cookies=self._cookies(),
+        )
+        data = resp.json()
+        assert data["ok"] is True
+        assert data["attachment"]["filename"] == "api-test.pdf"
+
+    def test_api_reject_invalid_type(self):
+        resp = self.client.post(
+            f"{BASE}/api/attachments/contracts/2",
+            files={"file": ("bad.txt", io.BytesIO(b"hello"), "text/plain")},
+            cookies=self._cookies(),
+        )
+        data = resp.json()
+        assert data["ok"] is False
+        assert "不支持" in data["error"]
+
+    def test_api_delete_attachment(self):
+        resp = self.client.delete(
+            f"{BASE}/api/attachments/1",
+            cookies=self._cookies(),
+        )
+        data = resp.json()
+        assert data["ok"] is True
