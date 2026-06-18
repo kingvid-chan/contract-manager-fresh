@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}{% if contract %}编辑合同{% else %}新建合同{% endif %} — Contract Manager{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>{% if contract %}编辑合同{% else %}新建合同{% endif %}</h1>
+    <a href="{% if contract %}{{ base_path }}/contracts/{{ contract.id }}{% else %}{{ base_path }}/{% endif %}" class="btn btn-sm">返回</a>
+</div>
+
+<div class="card">
+    <form method="post" class="form">
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="title">合同名称 <span class="required">*</span></label>
+                <input type="text" id="title" name="title"
+                       value="{{ contract.title if contract else '' }}"
+                       required maxlength="256">
+            </div>
+            <div class="form-group">
+                <label for="party_a">甲方 <span class="required">*</span></label>
+                <input type="text" id="party_a" name="party_a"
+                       value="{{ contract.party_a if contract else '' }}"
+                       required maxlength="256">
+            </div>
+            <div class="form-group">
+                <label for="party_b">乙方</label>
+                <input type="text" id="party_b" name="party_b"
+                       value="{{ contract.party_b if contract else '' }}"
+                       maxlength="256">
+            </div>
+            <div class="form-group">
+                <label for="sign_date">签订日期</label>
+                <input type="date" id="sign_date" name="sign_date"
+                       value="{{ contract.sign_date.isoformat() if contract and contract.sign_date else '' }}">
+            </div>
+            <div class="form-group">
+                <label for="start_date">生效日期</label>
+                <input type="date" id="start_date" name="start_date"
+                       value="{{ contract.start_date.isoformat() if contract and contract.start_date else '' }}">
+            </div>
+            <div class="form-group">
+                <label for="end_date">到期日期</label>
+                <input type="date" id="end_date" name="end_date"
+                       value="{{ contract.end_date.isoformat() if contract and contract.end_date else '' }}">
+            </div>
+            <div class="form-group">
+                <label for="amount">合同金额</label>
+                <input type="number" id="amount" name="amount" step="0.01" min="0"
+                       value="{{ "%.2f"|format(contract.amount) if contract and contract.amount else '' }}">
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="remarks">备注</label>
+            <textarea id="remarks" name="remarks" rows="3">{{ contract.remarks if contract else '' }}</textarea>
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+                {% if contract %}保存修改{% else %}创建合同{% endif %}
+            </button>
+            <a href="{% if contract %}{{ base_path }}/contracts/{{ contract.id }}{% else %}{{ base_path }}/{% endif %}" class="btn btn-sm">取消</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

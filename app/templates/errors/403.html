@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}403 禁止访问 — Contract Manager{% endblock %}
+{% block content %}
+<div class="error-page">
+    <h1>🔒 403</h1>
+    <h2>权限不足</h2>
+    <p>您没有访问此页面的权限。如需访问，请联系管理员。</p>
+    <a href="{{ base_path }}/" class="btn btn-primary">返回首页</a>
+</div>
+{% endblock %}

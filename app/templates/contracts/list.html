@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}合同列表 — Contract Manager{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>📄 合同列表</h1>
+    <a href="{{ base_path }}/contracts/new" class="btn btn-primary">+ 新建合同</a>
+</div>
+
+{% if contracts %}
+<table class="table">
+    <thead>
+        <tr>
+            <th>合同编号</th>
+            <th>合同名称</th>
+            <th>甲方</th>
+            <th>乙方</th>
+            <th>金额</th>
+            <th>状态</th>
+            <th>创建时间</th>
+            <th>操作</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for c in contracts %}
+        <tr>
+            <td><code>{{ c.contract_no }}</code></td>
+            <td><a href="{{ base_path }}/contracts/{{ c.id }}">{{ c.title }}</a></td>
+            <td>{{ c.party_a }}</td>
+            <td>{{ c.party_b or '-' }}</td>
+            <td>{% if c.amount %}¥{{ "%.2f"|format(c.amount) }}{% else %}-{% endif %}</td>
+            <td><span class="status-badge status-{{ c.status }}">{{ c.status }}</span></td>
+            <td>{{ c.created_at.strftime('%Y-%m-%d') if c.created_at else '-' }}</td>
+            <td>
+                <a href="{{ base_path }}/contracts/{{ c.id }}" class="btn btn-sm">查看</a>
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<div class="empty-state">
+    <p>暂无合同数据</p>
+    <a href="{{ base_path }}/contracts/new" class="btn btn-primary">创建第一份合同</a>
+</div>
+{% endif %}
+{% endblock %}

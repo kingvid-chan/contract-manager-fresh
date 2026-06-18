@@ -1,0 +1,39 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.11.15, pytest-8.3.4, pluggy-1.6.0 -- /Users/cqw/外部需求/.conda/codingagent/bin/python
+cachedir: .pytest_cache
+rootdir: /Users/cqw/外部需求/contract-manager-fresh
+plugins: anyio-4.14.0
+collecting ... collected 51 items
+
+tests/test_self.py::TestLogin::test_login_page_renders PASSED            [  1%]
+tests/test_self.py::TestLogin::test_login_success_admin PASSED           [  3%]
+tests/test_self.py::TestLogin::test_login_success_regular_user PASSED    [  5%]
+tests/test_self.py::TestLogin::test_login_wrong_password PASSED          [  7%]
+tests/test_self.py::TestLogin::test_login_nonexistent_user PASSED        [  9%]
+tests/test_self.py::TestLogin::test_login_disabled_user PASSED           [ 11%]
+tests/test_self.py::TestLogin::test_login_page_has_demo_info PASSED      [ 13%]
+tests/test_self.py::TestAuthProtection::test_unauthenticated_redirect_to_login PASSED [ 15%]
+tests/test_self.py::TestAuthProtection::test_unauthenticated_contracts_redirect PASSED [ 17%]
+tests/test_self.py::TestAuthProtection::test_unauthenticated_users_redirect PASSED [ 19%]
+tests/test_self.py::TestAuthProtection::test_non_admin_cannot_access_users PASSED [ 21%]
+tests/test_self.py::TestAuthProtection::test_non_admin_cannot_access_audit_logs PASSED [ 23%]
+tests/test_self.py::TestUserCRUD::test_list_users PASSED                 [ 25%]
+tests/test_self.py::TestUserCRUD::test_create_user_form PASSED           [ 27%]
+tests/test_self.py::TestUserCRUD::test_create_user PASSED                [ 29%]
+tests/test_self.py::TestUserCRUD::test_create_duplicate_user_fails PASSED [ 31%]
+tests/test_self.py::TestUserCRUD::test_edit_user_form PASSED             [ 33%]
+tests/test_self.py::TestUserCRUD::test_update_user PASSED                [ 35%]
+tests/test_self.py::TestUserCRUD::test_toggle_user_status PASSED         [ 37%]
+tests/test_self.py::TestUserCRUD::test_self_disable_prevented PASSED     [ 39%]
+tests/test_self.py::TestUserCRUD::test_reset_password PASSED             [ 41%]
+tests/test_self.py::TestUserCRUD::test_delete_user PASSED                [ 43%]
+tests/test_self.py::TestUserCRUD::test_self_delete_prevented PASSED      [ 45%]
+tests/test_self.py::TestContractCRUD::test_contract_list_page PASSED     [ 47%]
+tests/test_self.py::TestContractCRUD::test_create_contract_form PASSED   [ 49%]
+tests/test_self.py::TestContractCRUD::test_create_contract PASSED        [ 50%]
+tests/test_self.py::TestContractCRUD::test_create_contract_missing_title PASSED [ 52%]
+tests/test_self.py::TestContractCRUD::test_create_contract_missing_party_a PASSED [ 54%]
+tests/test_self.py::TestContractCRUD::test_contract_detail_page PASSED   [ 56%]
+tests/test_self.py::TestContractCRUD::test_edit_contract PASSED          [ 58%]
+tests/test_self.py::TestContractCRUD::test_status_flow_draft_to_pending_review PASSED [ 60%]
+tests/test_self.py::TestContractCRUD::test_status_flow_pending_to_approved 
