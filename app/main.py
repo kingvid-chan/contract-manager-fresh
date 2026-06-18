@@ -4,13 +4,18 @@ from pathlib import Path
 from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, FileResponse
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.status import HTTP_302_FOUND
 
 from app.config import settings
 from app.database import init_db
 from app.routers import auth, users, contracts, attachments
+from app.api import auth as api_auth
+from app.api import contracts as api_contracts
+from app.api import users as api_users
+from app.api import attachments as api_attachments
+from app.api import audit as api_audit
 
 
 # ── Application ──────────────────────────────────────────────────────────────
@@ -56,13 +61,22 @@ class CacheControlMiddleware:
 PUBLIC_PATHS = {
     "/auth/login",
     "/projects/contract-manager-fresh/auth/login",
+    # API auth endpoints (login, but let API routes handle their own auth)
 }
 STATIC_PREFIXES = ("/static", "/projects/contract-manager-fresh/static")
+API_PREFIXES = ("/projects/contract-manager-fresh/api/",)
+PUBLIC_API_PATHS = {
+    "/projects/contract-manager-fresh/api/auth/login",
+}
 
 
 class AuthGuardMiddleware:
     """Redirect unauthenticated users to login. Pure ASGI — placed inside
-    SessionMiddleware so scope['session'] is available."""
+    SessionMiddleware so scope['session'] is available.
+
+    Allows all API paths through — API endpoints handle their own auth checks.
+    Allows SPA static files through.
+    """
 
     def __init__(self, app):
         self.app = app
@@ -75,12 +89,22 @@ class AuthGuardMiddleware:
         path = scope.get("path", "")
 
         # Allow public paths
-        if path in PUBLIC_PATHS:
+        if path in PUBLIC_PATHS or path in PUBLIC_API_PATHS:
             await self.app(scope, receive, send)
             return
 
         # Allow static files
         if any(path.startswith(p) for p in STATIC_PREFIXES):
+            await self.app(scope, receive, send)
+            return
+
+        # Allow all API paths (API endpoints handle their own auth)
+        if any(path.startswith(p) for p in API_PREFIXES):
+            await self.app(scope, receive, send)
+            return
+
+        # Allow SPA static files
+        if path.startswith(f"{settings.base_path}/spa/"):
             await self.app(scope, receive, send)
             return
 
@@ -137,7 +161,16 @@ app.mount(
 )
 
 
-# ── Route Registration ──────────────────────────────────────────────────────
+# ── Route Registration: API (JSON) ───────────────────────────────────────────
+
+app.include_router(api_auth.router, prefix=settings.base_path)
+app.include_router(api_contracts.router, prefix=settings.base_path)
+app.include_router(api_users.router, prefix=settings.base_path)
+app.include_router(api_attachments.router, prefix=settings.base_path)
+app.include_router(api_audit.router, prefix=settings.base_path)
+
+
+# ── Route Registration: SSR (backward-compatible Jinja2) ─────────────────────
 
 app.include_router(auth.router, prefix=settings.base_path)
 app.include_router(users.router, prefix=settings.base_path)
@@ -146,44 +179,48 @@ app.include_router(attachments.router, prefix=settings.base_path)
 app.include_router(attachments.contract_router, prefix=settings.base_path)
 
 
-# ── Dashboard (home page) ────────────────────────────────────────────────────
+# ── SPA Entry Point (root — Vue Router hash mode) ────────────────────────────
+
+SPA_INDEX = BASE_DIR / "static" / "spa" / "index.html"
+
 
 @app.get(f"{settings.base_path}/", response_class=HTMLResponse)
-async def dashboard(request: Request):
-    """Main dashboard — shows contract list."""
-    from app.database import SessionLocal
-    from app.services.contract import list_contracts
-
-    user_id = request.session.get("user_id")
-    if not user_id:
-        return RedirectResponse(
-            url=f"{settings.base_path}/auth/login",
-            status_code=HTTP_302_FOUND,
-        )
-
-    db = SessionLocal()
-    try:
-        contracts = list_contracts(db)
+async def spa_root(request: Request):
+    """Serve the Vue SPA index. SPA uses hash routing (/#/login, etc.)."""
+    if not SPA_INDEX.exists():
+        # Fallback: old dashboard if SPA not built yet
+        from app.database import SessionLocal
+        from app.services.contract import list_contracts
         from app.models.contract import VALID_STATUSES
-        return templates.TemplateResponse("dashboard.html", {
-            "request": request,
-            "contracts": contracts,
-            "user": {
-                "user_id": user_id,
-                "username": request.session.get("username"),
-                "role": request.session.get("role"),
-            },
-            "valid_statuses": VALID_STATUSES,
-        })
-    finally:
-        db.close()
+        user_id = request.session.get("user_id")
+        if not user_id:
+            return RedirectResponse(
+                url=f"{settings.base_path}/auth/login",
+                status_code=HTTP_302_FOUND,
+            )
+        db = SessionLocal()
+        try:
+            contracts = list_contracts(db)
+            return templates.TemplateResponse("dashboard.html", {
+                "request": request,
+                "contracts": contracts,
+                "user": {
+                    "user_id": user_id,
+                    "username": request.session.get("username"),
+                    "role": request.session.get("role"),
+                },
+                "valid_statuses": VALID_STATUSES,
+            })
+        finally:
+            db.close()
+    return FileResponse(SPA_INDEX, media_type="text/html")
 
 
-# ── Audit Log Viewer (admin only) ────────────────────────────────────────────
+# ── Audit Log Viewer (admin only, SSR backward-compatible) ───────────────────
 
 @app.get(f"{settings.base_path}/audit-logs", response_class=HTMLResponse)
 async def audit_logs_page(request: Request):
-    """View audit logs (admin only)."""
+    """View audit logs (admin only) — SSR backward-compatible route."""
     from app.database import SessionLocal
     from app.services.audit import get_audit_logs
 
