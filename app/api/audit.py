@@ -22,9 +22,9 @@ async def api_audit_logs(request: Request, db: Session = Depends(get_db)):
                 "user_id": log.user_id,
                 "username": log.user.username if log.user else "system",
                 "action": log.action,
-                "target_type": log.target_type,
-                "target_id": log.target_id,
-                "detail": log.detail,
+                "target_type": log.entity_type,
+                "target_id": log.entity_id,
+                "detail": log.details,
                 "created_at": log.created_at.isoformat() if log.created_at else None,
             }
             for log in logs

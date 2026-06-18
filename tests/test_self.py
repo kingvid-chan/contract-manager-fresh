@@ -853,7 +853,8 @@ class TestJsonApiContracts:
         assert resp2.json()["ok"] is False
 
     def test_api_unauthenticated(self):
-        resp = self.client.get(f"{BASE}/api/contracts")
+        client = fresh_client()
+        resp = client.get(f"{BASE}/api/contracts")
         data = resp.json()
         assert data["ok"] is False
         assert "未登录" in data.get("error", "")
@@ -1011,8 +1012,19 @@ class TestJsonApiAttachments:
         assert "不支持" in data["error"]
 
     def test_api_delete_attachment(self):
+        # Upload an attachment first to have a known ID
+        pdf_content = b"%PDF-1.4\n%Fake PDF for delete test\n%%EOF"
+        upload_resp = self.client.post(
+            f"{BASE}/api/attachments/contracts/2",
+            files={"file": ("delete-me.pdf", io.BytesIO(pdf_content), "application/pdf")},
+            cookies=self._cookies(),
+        )
+        upload_data = upload_resp.json()
+        assert upload_data["ok"] is True
+        att_id = upload_data["attachment"]["id"]
+
         resp = self.client.delete(
-            f"{BASE}/api/attachments/1",
+            f"{BASE}/api/attachments/{att_id}",
             cookies=self._cookies(),
         )
         data = resp.json()
